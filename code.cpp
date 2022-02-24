@@ -36,11 +36,26 @@ typedef vector<vi> vvi;
 typedef vector<vl> vvl;
 mt19937_64 rang(chrono::high_resolution_clock::now().time_since_epoch().count());
 
-map<string, ll> like, dislike;
-set<string> ing;
-vector<string> ings;
-vector<pair<ll, string>> ele;
-set<string> ans;
+struct person
+{
+    string name;
+    ll free = 0;
+    vector<pair<string, ll>> skills;
+};
+
+struct project
+{
+    string name;
+    ll time;
+    ll bestBefore;
+    ll score;
+    ll numberOfContributors;
+    vector<pair<string, ll>> skills;
+};
+
+vector<person> people;
+vector<project> projects;
+vector<pair<string, vector<string>>> ans;
 
 void readfile(string name) // reads all the raw data and converts it into the objects
 {
@@ -49,6 +64,43 @@ void readfile(string name) // reads all the raw data and converts it into the ob
     ifstream filena(name); // opens the file
 
     ll t = 0;
+    filena >> n >> m;
+    fo(i, n)
+    {
+        string name;
+        ll skills;
+        filena >> name >> skills;
+        person p;
+        p.name = name;
+        fo(j, skills)
+        {
+            string skill;
+            ll level;
+            filena >> skill >> level;
+            p.skills.pb(mp(skill, level));
+        }
+        people.pb(p);
+    }
+
+    fo(i, m)
+    {
+        string name;
+        ll skills, time, bestBefore, score, numberOfContributors;
+        filena >> name >> time >> score >> bestBefore >> numberOfContributors;
+        project p;
+        p.name = name;
+        p.time = time;
+        p.bestBefore = bestBefore;
+        p.score = score;
+        fo(j, numberOfContributors)
+        {
+            string skill;
+            ll level;
+            filena >> skill >> level;
+            p.skills.pb(mp(skill, level));
+        }
+        projects.pb(p);
+    }
     filena >> t;
     fo(i, t)
     {
@@ -56,7 +108,7 @@ void readfile(string name) // reads all the raw data and converts it into the ob
         fo(j, n)
         {
             filena >> s;
-                }
+        }
         filena >> m;
         fo(j, m)
         {
@@ -66,19 +118,91 @@ void readfile(string name) // reads all the raw data and converts it into the ob
     filena.close(); // file read complete
 }
 
+bool comp(const project &a, const project &b)
+{
+    if (a.bestBefore == b.bestBefore)
+        if (a.time == b.time)
+            return a.score > b.score;
+        else
+            return a.time < b.time;
+    else
+        return a.bestBefore < b.bestBefore;
+}
+
 void solve()
 {
     ll i, n, m, j;
-    
+    sort(all(projects), comp);
+    ll time = 0;
+    vector<string> working;
+    for (auto project : projects) // current project
+    {
+        if (project.bestBefore - (time + project.time) < 0 && project.score + project.bestBefore - time - project.time < 0) // if score negative
+            continue;
+        else
+        {
+            bool isProject = true;        // is doable
+            vector<string> names;         // names of people who can do the project
+            for (auto s : project.skills) // going through the skills
+            {
+                bool found = false;        // is the skill found
+                string personName = "";    // name of the person
+                ll level = LLONG_MAX;      // level of the skill
+                for (auto person : people) // going through the people
+                {
+                    for (auto skill : person.skills) // going through the skills of the person to search
+                    {
+                        if (skill.F == s.F && skill.S >= s.S && person.free<=time) // is the skill with the level found
+                        {
+                            found = true;        // skill found
+                            if (skill.S < level) // is a person with lower skill found
+                            {
+                                level = skill.S;          // level of the skill
+                                personName = person.name; // name of the person
+                            }
+                        }
+                    }
+                }
+                if (found) // are all skills found
+                {
+                    names.pb(personName); // add the name of the person in the names
+
+                    fo(j, people.size())
+                    {
+                        if (people[j].name == personName)
+                        {
+                            people[j].free = time + project.time;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    isProject = false; // project not doable
+                    break;
+                }
+            }
+            if (isProject) // is project doable
+            {
+                time += project.time; // increase the time
+                ans.pb(mp(project.name, names));
+            }
+        }
+    }
 }
 
 void printData()
 {
     ll i;
-    cout << ans.size() << " ";
+    cout << ans.size() << endl;
     for (auto x : ans)
     {
-        cout << x << " ";
+        cout << x.F << "\n";
+        for (auto y : x.S)
+        {
+            cout << y << " ";
+        }
+        cout << "\n";
     }
     cout << "\n";
 }
@@ -89,26 +213,29 @@ void write_data(string name)
     ofstream fileout;
     fileout.open(name);
     ll i = 0;
-    fileout << ans.size() << " ";
+    fileout << ans.size() << endl;
     for (auto x : ans)
     {
-        fileout << x << " ";
+        fileout << x.F << "\n";
+        for (auto y : x.S)
+        {
+            fileout << y << " ";
+        }
+        fileout << "\n";
     }
+    fileout << "\n";
     fileout.close();
 }
 
 int main()
 {
-    string input[] = {"a_an_example.in", "b_basic.in", "c_coarse.in", "d_difficult.in", "e_elaborate.in"};
-    string output[] = {"a_an_example.out", "b_basic.out", "c_coarse.out", "d_difficult.out", "e_elaborate.out"};
+    string input[] = {"a.in", "b.in", "c.in", "d.in", "e.in", "f.in"};
+    string output[] = {"a.out", "b.out", "c.out", "d.out", "e.out", "f.out"};
     ll i;
-    fo(i, 5)
+    fo(i, 6)
     {
-        like.clear();
-        dislike.clear();
-        ing.clear();
-        ings.clear();
-        ele.clear();
+        people.clear();
+        projects.clear();
         ans.clear();
         readfile(input[i] + ".txt");
         solve();
