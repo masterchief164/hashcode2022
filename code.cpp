@@ -120,13 +120,29 @@ void readfile(string name) // reads all the raw data and converts it into the ob
 
 bool comp(const project &a, const project &b)
 {
-    if (a.bestBefore == b.bestBefore)
-        if (a.time == b.time)
+    // if (a.bestBefore == b.bestBefore)
+    //     if (a.time == b.time)
+    //         return a.score > b.score;
+    //     else
+    //         return a.time < b.time;
+    // else
+    //     return a.bestBefore < b.bestBefore;
+
+    // if (a.score == b.score)
+    //     if (a.time == b.time)
+    //         return a.bestBefore < b.bestBefore;
+    //     else
+    //         return a.time < b.time;
+    // else
+    //     return a.score > b.score;
+
+    if (a.time == b.time)
+        if (a.bestBefore == b.bestBefore)
             return a.score > b.score;
         else
-            return a.time < b.time;
+            return a.bestBefore < b.bestBefore;
     else
-        return a.bestBefore < b.bestBefore;
+        return a.time < b.time;
 }
 
 void solve()
@@ -152,7 +168,7 @@ void solve()
                 {
                     for (auto skill : person.skills) // going through the skills of the person to search
                     {
-                        if (skill.F == s.F && skill.S >= s.S && person.free<=time) // is the skill with the level found
+                        if (skill.F == s.F && skill.S >= s.S && person.free <= time) // is the skill with the level found
                         {
                             found = true;        // skill found
                             if (skill.S < level) // is a person with lower skill found
